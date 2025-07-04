@@ -2,20 +2,15 @@
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
   push:
     branches: ['main']
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets the GITHUB_TOKEN permissions to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow one concurrent deployment
 concurrency:
   group: 'pages'
   cancel-in-progress: true
@@ -26,15 +21,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Show environment info
+        run: |
+          echo "GITHUB_REF: $GITHUB_REF"
+          echo "GITHUB_SHA: $GITHUB_SHA"
+          echo "GITHUB_RUN_ID: $GITHUB_RUN_ID"
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: yarn
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
       - name: Build
         run: yarn build
+
+      - name: List dist contents
+        run: |
+          echo "Dist contents:"
+          ls -l ./dist || echo "dist not found"
+          find ./dist | head -20
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -53,8 +65,16 @@ jobs:
         with:
           name: github-pages
           path: ./dist
+
+      - name: List dist after download
+        run: |
+          echo "Dist after download:"
+          ls -l ./dist || echo "dist not found"
+          find ./dist | head -20
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v3
